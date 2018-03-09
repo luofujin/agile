@@ -4,7 +4,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
 
-import com.edreamoon.mread.ReadMainActivity;
+//import com.edreamoon.mread.ReadMainActivity;
 
 public class CameraActivity extends AppCompatActivity {
 
@@ -23,7 +23,7 @@ public class CameraActivity extends AppCompatActivity {
         findViewById(R.id.bt2).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                ReadMainActivity.start(CameraActivity.this);
+//                ReadMainActivity.start(CameraActivity.this);
             }
         });
     }
