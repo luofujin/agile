@@ -1,14 +1,26 @@
-if (!project.hasProperty("runAlone")) {
-    throw new RuntimeException("runAlone is not config in gradle.properties")
+//  property 读取,读取自定义文件名里的属性时用下面注释代码；gradle.properties文件的可以直接使用
+/*def props = new Properties()
+file("gradle.properties").withInputStream { props.load(it) }
+def runAlone = props.getProperty("runAlone")*/
+
+String TAG = "RUN_ALONE"
+def mPath = project.path
+def mTaskNames = project.gradle.startParameter.taskNames
+log(TAG, " path = $mPath; taskNames = $mTaskNames") //独立运行 mread 时， path = :mphoto; taskNames = [:mread:assembleDebug]
+
+def mLibName = mPath.substring(1)
+log(TAG, "current lib module: $mLibName") //mphoto
+
+//boolean runAlone = project.properties.get("runAlone")
+AssembleTask taskInfo = getTaskInfo(mTaskNames)
+def mAppName = getAppName(taskInfo)
+boolean mAlone = Boolean.parseBoolean(runAlone) //groovy 布尔类型不同于java，类似于c
+log(TAG, "runAlone: $runAlone")
+if (taskInfo.isAssemble && mAlone && !mLibName.equals(mAppName)) {
+    mAlone = false
 }
-
-//def props = new Properties()
-//file("gradle.properties").withInputStream { props.load(it) }
-//def runAlone = props.getProperty("runAlone")
-
-if (runAlone) { //boolean runAlone = project.properties.get("runAlone")
+if (mAlone) {
     project.apply plugin: 'com.android.application'
-
     project.android.sourceSets {
         main {
             manifest.srcFile 'src/main/runalone/AndroidManifest.xml'
@@ -21,4 +33,33 @@ if (runAlone) { //boolean runAlone = project.properties.get("runAlone")
 } else {
     project.apply plugin: 'com.android.library'
     println 'apply plugin library'
+}
+
+def getAppName(AssembleTask taskInfo) {
+    return taskInfo.modules.size() > 0 ? taskInfo.modules[0] : null
+}
+
+def getTaskInfo(def taskNames) {// [:app:assembleDebug]
+    def assembleTask = new AssembleTask()
+    for (String task : taskNames) {
+        println("getTaskInfo 111 " + task) //:app:assembleDebug
+        if (task.toUpperCase().contains('ASSEMBLE')) {
+            def split = task.split(":")
+            def name = split.length > 1 ? split[split.length - 2] : ""
+            println("getTaskInfo 222 $name")
+            assembleTask.modules.add(name)
+            assembleTask.isAssemble = true
+            break
+        }
+    }
+    return assembleTask
+}
+
+class AssembleTask {
+    def modules = []
+    boolean isAssemble
+}
+
+def log(def tag, def msg) {
+    println("$tag@ $msg ")
 }

@@ -3,7 +3,7 @@
     package="com.edreamoon.mread">
 
     <application>
-        <activity android:name="com.edreamoon.component.mread.ReadMainActivity"></activity>
+        <activity android:name=".ReadMainActivity"></activity>
     </application>
 
 </manifest>

@@ -1,30 +1,36 @@
-package com.edreamoon.mcamera;
+package com.edreamoon.photo;
 
+import android.content.Context;
+import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
 
 //import com.edreamoon.mread.ReadMainActivity;
 
-public class CameraActivity extends AppCompatActivity {
+public class PhotoActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.camera_activity_camera);
+        setContentView(R.layout.activity_photo);
 
         findViewById(R.id.bt).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                SecActivity.start(CameraActivity.this);
+                SecActivity.start(PhotoActivity.this);
             }
         });
 
         findViewById(R.id.bt2).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-//                ReadMainActivity.start(CameraActivity.this);
+//                ReadMainActivity.start(PhotoActivity.this);
             }
         });
+    }
+
+    public static void start(Context context) {
+        context.startActivity(new Intent(context, PhotoActivity.class));
     }
 }

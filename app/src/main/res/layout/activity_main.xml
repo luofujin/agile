@@ -6,20 +6,16 @@
     android:orientation="vertical">
 
     <Button
-        android:id="@+id/bt1"
+        android:id="@+id/photo"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="1111111" />
+        android:text="Start Photo" />
 
     <Button
+        android:id="@+id/read"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="22222" />
+        android:text="Start Read" />
 
-    <Button
-        android:id="@+id/trace"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Trace" />
 
 </LinearLayout>

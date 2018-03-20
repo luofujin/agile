@@ -3,7 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.edreamoon.mcamera.CameraActivity">
+    tools:context="com.edreamoon.photo.PhotoActivity">
 
 
     <Button
@@ -22,6 +22,6 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_centerInParent="true"
-        android:text="Main  Activity Layout"
+        android:text="Photo Main  Activity"
         android:textSize="30dp" />
 </RelativeLayout>
