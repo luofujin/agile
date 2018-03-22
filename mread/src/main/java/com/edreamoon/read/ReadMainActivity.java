@@ -1,4 +1,4 @@
-package com.edreamoon.mread;
+package com.edreamoon.read;
 
 import android.content.Context;
 import android.content.Intent;

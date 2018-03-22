@@ -29,7 +29,17 @@ if (mAlone) {
         }
     }
 
-    println 'apply plugin application'
+    //添加依赖，只在assemble任务的才会添加依赖，因此在开发期间组件之间是完全感知不到的
+    if (taskInfo.isAssemble && project.hasProperty('imComponent')) {
+        println "******** imComponent1: $imComponent"
+        if (imComponent != null && imComponent != '') {
+            def components = imComponent.split(',')
+            for (String s : components) {
+                println("imComponent2: $s")
+                project.dependencies.add('implementation', project.project(":$s"))
+            }
+        }
+    }
 } else {
     project.apply plugin: 'com.android.library'
     println 'apply plugin library'
