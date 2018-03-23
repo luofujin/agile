@@ -1,5 +1,4 @@
 apply from: "$rootDir/buildscript/runAlone.gradle"
-//apply plugin: 'com.android.library'
 android {
     buildToolsVersion ver.buildToolsVersion
     compileSdkVersion ver.compileSdkVersion

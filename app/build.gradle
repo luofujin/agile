@@ -1,6 +1,7 @@
 apply from: "$rootDir/buildscript/runAlone.gradle"
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
+apply plugin: com.edreamoon.RouterPlu
 
 android {
     buildToolsVersion ver.buildToolsVersion
