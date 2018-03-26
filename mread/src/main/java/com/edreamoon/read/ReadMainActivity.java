@@ -11,6 +11,8 @@ public class ReadMainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_read_main);
+
+        new Response();
     }
 
     public static void start(Context context) {

@@ -21,6 +21,26 @@ allprojects {
     }
 }
 
+subprojects {
+    afterEvaluate { project ->
+        if (project.hasProperty("android")) {
+            println "******* task Name: " + project.gradle.startParameter.taskNames
+            project.android {
+                flavorDimensions "default"
+                productFlavors {
+                    prod {
+                        dimension "default"
+                    }
+                    google {
+                        dimension "default"
+                    }
+                }
+            }
+        }
+    }
+}
+
+
 task clean(type: Delete) {
     delete rootProject.buildDir
 }

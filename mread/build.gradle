@@ -14,10 +14,26 @@ android {
         debug {
         }
     }
+//
+//    flavorDimensions "default"
+//    productFlavors {
+//        prod {
+//            dimension "default"
+//        }
+//        google {
+//            dimension "default"
+//        }
+//    }
+
+    sourceSets {
+        prod.java.srcDirs = ['src/main/java', 'src/main/prod/java']
+        google.java.srcDirs = ['src/main/java', 'src/main/google/java']
+    }
 }
 
 dependencies {
     implementation 'com.android.support.constraint:constraint-layout:1.0.2'
     compile fileTree(dir: 'libs', include: ['*.jar'])
+    prodImplementation fileTree('ads')
     compile ver.v7
 }
