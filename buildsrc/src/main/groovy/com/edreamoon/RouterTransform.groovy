@@ -7,7 +7,6 @@ import org.apache.commons.io.FileUtils
 import org.gradle.api.Project
 
 
-
 class RouterTransform extends Transform {
     private Project mProject
 
@@ -25,6 +24,11 @@ class RouterTransform extends Transform {
 
     @Override
     void transform(Context context, Collection<TransformInput> inputs, Collection<TransformInput> referencedInputs, TransformOutputProvider outputProvider, boolean isIncremental) throws IOException, TransformException, InterruptedException {
+        println 'RouterTransform //=============== start ===============//'
+        def cachePath = getCachePath()
+
+        println("RouterTransform cachePath: ${cachePath}")
+
         //Transform的inputs有两种类型，一种是目录，一种是jar包，要分开遍历
         inputs.each { TransformInput input ->
             //对类型为“文件夹”的input进行遍历 文件夹里面包含的是我们手写的类以及R.class、BuildConfig.class以及R$XXX.class等
@@ -33,12 +37,23 @@ class RouterTransform extends Transform {
                 def dest = outputProvider.getContentLocation(directoryInput.name, directoryInput.contentTypes, directoryInput.scopes, Format.DIRECTORY)
                 // 将input的目录复制到output指定目录
                 println("RouterTransform file: $directoryInput.file")
+                println("RouterTransform changed: ${directoryInput.getChangedFiles()}")
+                directoryInput.changedFiles.each {
+                    println("$it.key -> $it.value")
+                }
+                def path = directoryInput.file.getAbsolutePath()
+                def md5Hex = DigestUtils.md5Hex(path)
+                println("RouterTransform directoryInput path:$path   $md5Hex")
+                def cacheDir = new File(cachePath, md5Hex)
+                if (!cacheDir.exists()) {
+                    println("RouterTransform not exist")
+                }
                 FileUtils.copyDirectory(directoryInput.file, dest)
             }
 
-
             //对类型为jar文件的input进行遍历 jar文件一般是第三方依赖库jar文件
             input.jarInputs.each { JarInput jarInput ->
+
                 // 重命名输出文件（同目录copyFile会冲突）
                 def jarName = jarInput.name
                 println("RouterTransform jar: $jarName")
@@ -55,6 +70,11 @@ class RouterTransform extends Transform {
         }
 
         println 'RouterTransform //=============== end===============//'
+    }
+
+    String getCachePath() {
+        def var = mProject.rootDir.absolutePath + File.separator + "build" + File.separator + "intermediates" + File.separator + "router"
+        return var
     }
 
     RouterTransform(Project project) {

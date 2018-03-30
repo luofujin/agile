@@ -19,14 +19,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         setContentView(R.layout.activity_main);
         findViewById(R.id.photo).setOnClickListener(this);
         findViewById(R.id.read).setOnClickListener(this);
+        findViewById(R.id.detail).setOnClickListener(this);
     }
 
     @Override
     public void onClick(View v) {
         int id = v.getId();
-//        if (id == R.id.photo) {
-//            PhotoActivity.start(this);
-//        } else if (id == R.id.read) {
+        if (id == R.id.detail) {
+           DetailActivity.start(this);
+        }
+
+//        else if (id == R.id.read) {
 //            ReadMainActivity.start(this);
 //        }
     }

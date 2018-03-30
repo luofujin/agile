@@ -1,1 +1,1 @@
-include ':app', ':mphoto', ':mread', ':buildsrc'
+include ':app', ':mphoto', ':mread', ':buildsrc', ':frouter'
