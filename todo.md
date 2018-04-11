@@ -5,3 +5,5 @@
 ## router
 ### get activity list
 ### get annotation activity
+### get annotation information
+### create path->activity mapping file

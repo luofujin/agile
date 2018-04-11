@@ -9,35 +9,33 @@ class RouterPlu implements Plugin<Project> {
         println("☆☆☆  RouterPlu apply start ☆☆☆")
         project.android.registerTransform(new RouterTransform(project))
 
-        //读取Activity列表，来过滤注解activity
         project.android.applicationVariants.all { variant ->
             variant.outputs.each { output ->
                 output.processManifest.outputs.upToDateWhen { false }
                 output.processManifest.doLast {
-
+                    println("setting buildTypeName ${variant.buildType.name}")
+                    AppInfo.activities.clear()
+//                        AppInfo.infos.clear()
                     ArrayList<File> manifestFileList = new ArrayList<>()
+
                     [output.processManifest.manifestOutputDirectory,
                      output.processManifest.instantRunManifestOutputDirectory
                     ].each { File directory ->
-                        if (directory.exists()) {
-                            println("@RouterPlu manifest dir path: ${directory.getAbsolutePath()}")
-                            def file = new File(directory, "AndroidManifest.xml")
-                            if (file.exists()) {
-                                manifestFileList.add(file)
-                            }
-                        }
+                        File mFile = new File(directory, "AndroidManifest.xml")
+                        println("adding real manifest path ${mFile.getAbsolutePath()}")
+                        manifestFileList.add(mFile)
                     }
 
                     manifestFileList.each { File manifestOutFile ->
                         if (manifestOutFile.exists()) {
-                            println("@RouterPlu manifest file Path: ${manifestOutFile.absolutePath}")
-                            FileUtils.processManifest(manifestOutFile.absolutePath, AppInfo.activities)
+                            println("adding manifestPath ${manifestOutFile.absolutePath}")
+                            Utils.processManifest(manifestOutFile.absolutePath, AppInfo.activities)
                         }
                     }
                 }
             }
         }
 
-        println("☆☆☆  RouterPlu end start ☆☆☆")
+        println("☆☆☆  RouterPlu end ☆☆☆")
     }
 }
