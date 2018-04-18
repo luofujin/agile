@@ -26,7 +26,40 @@ class RouterTransform extends Transform {
     void transform(Context context, Collection<TransformInput> inputs, Collection<TransformInput> referencedInputs, TransformOutputProvider outputProvider, boolean isIncremental) throws IOException, TransformException, InterruptedException {
         println 'RouterTransform //=============== start ===============//'
 
-        Utils.appendBootClassPath(mProject)
+//        //遍历input
+//        inputs.each { TransformInput input ->
+//            //遍历文件夹
+//            input.directoryInputs.each { DirectoryInput directoryInput ->
+//                //注入代码
+//                ClassModifier.inject(directoryInput.file.absolutePath, mProject)
+//
+//                // 获取output目录
+//                def dest = outputProvider.getContentLocation(directoryInput.name,
+//                        directoryInput.contentTypes, directoryInput.scopes, Format.DIRECTORY)//这里写代码片
+//
+//                // 将input的目录复制到output指定目录
+//                FileUtils.copyDirectory(directoryInput.file, dest)
+//            }
+//
+//            ////遍历jar文件 对jar不操作，但是要输出到out路径
+//            input.jarInputs.each { JarInput jarInput ->
+//                //注入代码
+////                ClassModifier.inject(jarInput.file.absolutePath, mProject)
+//
+//                // 重命名输出文件（同目录copyFile会冲突）
+//                def jarName = jarInput.name
+//                println("jar = " + jarInput.file.getAbsolutePath())
+//                def md5Name = DigestUtils.md5Hex(jarInput.file.getAbsolutePath())
+//                if (jarName.endsWith(".jar")) {
+//                    jarName = jarName.substring(0, jarName.length() - 4)
+//                }
+//                def dest = outputProvider.getContentLocation(jarName + md5Name, jarInput.contentTypes, jarInput.scopes, Format.JAR)
+//                FileUtils.copyFile(jarInput.file, dest)
+//            }
+//        }
+        def cachePath = getCachePath(mProject)
+        ValueHolder.buildPath = cachePath + File.separator
+        ClassModifier.appendBootClassPath(mProject)
 
         //Transform的inputs有两种类型，一种是目录，一种是jar包，要分开遍历
         inputs.each { TransformInput input ->
@@ -34,17 +67,17 @@ class RouterTransform extends Transform {
             input.jarInputs.each { JarInput jarInput ->
                 //jar文件一般是第三方依赖库jar文件
                 // 重命名输出文件（同目录copyFile会冲突）
-                def jarName = jarInput.name
-                def md5Name = DigestUtils.md5Hex(jarInput.file.getAbsolutePath())
-                if (jarName.endsWith(".jar")) {
-                    jarName = jarName.substring(0, jarName.length() - 4)
-                }
-                //Utils.appendClassPath(jarInput.file.getAbsolutePath())
+//                def jarName = jarInput.name
+//                def md5Name = DigestUtils.md5Hex(jarInput.file.getAbsolutePath())
+//                if (jarName.endsWith(".jar")) {
+//                    jarName = jarName.substring(0, jarName.length() - 4)
+//                }
+                ClassModifier.appendClassPath(jarInput.file.getAbsolutePath())
                 //生成输出路径
-                def dest = outputProvider.getContentLocation(jarName + md5Name,
-                        jarInput.contentTypes, jarInput.scopes, Format.JAR)
+//                def dest = outputProvider.getContentLocation(jarName + md5Name,
+//                        jarInput.contentTypes, jarInput.scopes, Format.JAR)
                 //将输入内容复制到输出
-                FileUtils.copyFile(jarInput.file, dest)
+//                FileUtils.copyFile(jarInput.file, dest)
 
             }
 
@@ -53,16 +86,62 @@ class RouterTransform extends Transform {
                 def dest = outputProvider.getContentLocation(directoryInput.name,
                         directoryInput.contentTypes,
                         directoryInput.scopes, Format.DIRECTORY)
-                Utils.appendClassPath(directoryInput.file.getAbsolutePath())
+                ClassModifier.appendClassPath(directoryInput.file.getAbsolutePath())
                 // 将input的目录复制到output指定目录
-                FileUtils.copyDirectory(directoryInput.file, dest)
+//                FileUtils.copyDirectory(directoryInput.file, dest)
+//                ClassModifier.testInject(directoryInput.file.absolutePath)
+
             }
+
         }
 
         //查找注解信息
-        Utils.findAnnotatedActivities()
-        Utils.clean()
+        ClassModifier.findAnnotatedActivities()
+        ClassModifier.injectRouter(mProject)
+
+        //Transform的inputs有两种类型，一种是目录，一种是jar包，要分开遍历
+        inputs.each { TransformInput input ->
+            //对类型为jar文件的input进行遍历
+            input.jarInputs.each { JarInput jarInput ->
+                //jar文件一般是第三方依赖库jar文件
+                // 重命名输出文件（同目录copyFile会冲突）
+                def jarName = jarInput.name
+                println("abcdef $jarName")
+                def md5Name = DigestUtils.md5Hex(jarInput.file.getAbsolutePath())
+                if (jarName.endsWith(".jar")) {
+                    jarName = jarName.substring(0, jarName.length() - 4)
+                }
+                //ClassModifier.appendClassPath(jarInput.file.getAbsolutePath())
+                //生成输出路径
+                def dest = outputProvider.getContentLocation(jarName + md5Name,
+                        jarInput.contentTypes, jarInput.scopes, Format.JAR)
+                //将输入内容复制到输出
+                FileUtils.copyFile(jarInput.file, dest)
+            }
+
+            //对类型为“文件夹”的input进行遍历 文件夹里面包含的是我们手写的类以及R.class、BuildConfig.class以及R$XXX.class等
+            input.directoryInputs.each { DirectoryInput directoryInput ->
+                def dest = outputProvider.getContentLocation(directoryInput.name,
+                        directoryInput.contentTypes,
+                        directoryInput.scopes, Format.DIRECTORY)
+//                ClassModifier.appendClassPath(directoryInput.file.getAbsolutePath())
+                // 将input的目录复制到output指定目录
+                FileUtils.copyDirectory(directoryInput.file, dest)
+            }
+            ClassModifier.clean()
+        }
+
         println 'RouterTransform //=============== end===============//'
+    }
+
+    static String getCachePath(Project project) {
+        String path = project.rootDir.absolutePath + File.separator + "build" + File.separator + "intermediates" + File.separator + "RouterCache"
+        println("getCachePath :" + path)
+        File dir = new File(path)
+        if (!dir.exists()) {
+            dir.mkdirs()
+        }
+        return dir.getAbsolutePath()
     }
 
     RouterTransform(Project project) {

@@ -28,6 +28,7 @@ dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
     compile ver.v7
     implementation project(path: ':frouter')
+    compile project(path: ':mphoto')
 }
 
 

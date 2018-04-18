@@ -1,5 +1,7 @@
 package com.edreamoon
 
-class AppInfo {
+class ValueHolder {
     public static Set<String> activities = new HashSet<>()
+    public static String buildPath
+
 }

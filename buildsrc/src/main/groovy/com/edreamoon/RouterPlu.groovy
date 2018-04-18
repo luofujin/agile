@@ -14,8 +14,8 @@ class RouterPlu implements Plugin<Project> {
                 output.processManifest.outputs.upToDateWhen { false }
                 output.processManifest.doLast {
                     println("setting buildTypeName ${variant.buildType.name}")
-                    AppInfo.activities.clear()
-//                        AppInfo.infos.clear()
+                    ValueHolder.activities.clear()
+//                        ValueHolder.infos.clear()
                     ArrayList<File> manifestFileList = new ArrayList<>()
 
                     [output.processManifest.manifestOutputDirectory,
@@ -29,7 +29,7 @@ class RouterPlu implements Plugin<Project> {
                     manifestFileList.each { File manifestOutFile ->
                         if (manifestOutFile.exists()) {
                             println("adding manifestPath ${manifestOutFile.absolutePath}")
-                            Utils.processManifest(manifestOutFile.absolutePath, AppInfo.activities)
+                            ClassModifier.processManifest(manifestOutFile.absolutePath, ValueHolder.activities)
                         }
                     }
                 }

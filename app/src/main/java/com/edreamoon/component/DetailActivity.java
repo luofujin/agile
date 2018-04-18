@@ -18,8 +18,9 @@ public class DetailActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_detail);
         new Test();
-        new RouterManager();
+//        new FRouter();
 //        FRouter.inject(this);
+//        PhotoActivity
     }
 
     public static void start(Context context) {
