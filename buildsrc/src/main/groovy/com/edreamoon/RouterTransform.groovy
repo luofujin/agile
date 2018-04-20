@@ -2,6 +2,9 @@ package com.edreamoon
 
 import com.android.build.api.transform.*
 import com.android.build.gradle.internal.pipeline.TransformManager
+import com.edreamoon.entity.DirectoryEntity
+import com.edreamoon.entity.JarEntity
+import com.edreamoon.entity.TransformEntity
 import org.apache.commons.codec.digest.DigestUtils
 import org.apache.commons.io.FileUtils
 import org.gradle.api.Project
@@ -25,109 +28,77 @@ class RouterTransform extends Transform {
     @Override
     void transform(Context context, Collection<TransformInput> inputs, Collection<TransformInput> referencedInputs, TransformOutputProvider outputProvider, boolean isIncremental) throws IOException, TransformException, InterruptedException {
         println 'RouterTransform //=============== start ===============//'
+        try {
+            def cachePath = getCachePath(mProject)
+            ValueHolder.buildPath = cachePath + File.separator
+            ClassModifier.appendBootClassPath(mProject)
 
-//        //遍历input
-//        inputs.each { TransformInput input ->
-//            //遍历文件夹
-//            input.directoryInputs.each { DirectoryInput directoryInput ->
-//                //注入代码
-//                ClassModifier.inject(directoryInput.file.absolutePath, mProject)
-//
-//                // 获取output目录
-//                def dest = outputProvider.getContentLocation(directoryInput.name,
-//                        directoryInput.contentTypes, directoryInput.scopes, Format.DIRECTORY)//这里写代码片
-//
-//                // 将input的目录复制到output指定目录
-//                FileUtils.copyDirectory(directoryInput.file, dest)
-//            }
-//
-//            ////遍历jar文件 对jar不操作，但是要输出到out路径
-//            input.jarInputs.each { JarInput jarInput ->
-//                //注入代码
-////                ClassModifier.inject(jarInput.file.absolutePath, mProject)
-//
-//                // 重命名输出文件（同目录copyFile会冲突）
-//                def jarName = jarInput.name
-//                println("jar = " + jarInput.file.getAbsolutePath())
-//                def md5Name = DigestUtils.md5Hex(jarInput.file.getAbsolutePath())
-//                if (jarName.endsWith(".jar")) {
-//                    jarName = jarName.substring(0, jarName.length() - 4)
-//                }
-//                def dest = outputProvider.getContentLocation(jarName + md5Name, jarInput.contentTypes, jarInput.scopes, Format.JAR)
-//                FileUtils.copyFile(jarInput.file, dest)
-//            }
-//        }
-        def cachePath = getCachePath(mProject)
-        ValueHolder.buildPath = cachePath + File.separator
-        ClassModifier.appendBootClassPath(mProject)
-
-        //Transform的inputs有两种类型，一种是目录，一种是jar包，要分开遍历
-        inputs.each { TransformInput input ->
-            //对类型为jar文件的input进行遍历
-            input.jarInputs.each { JarInput jarInput ->
-                //jar文件一般是第三方依赖库jar文件
-                // 重命名输出文件（同目录copyFile会冲突）
-//                def jarName = jarInput.name
-//                def md5Name = DigestUtils.md5Hex(jarInput.file.getAbsolutePath())
-//                if (jarName.endsWith(".jar")) {
-//                    jarName = jarName.substring(0, jarName.length() - 4)
-//                }
-                ClassModifier.appendClassPath(jarInput.file.getAbsolutePath())
-                //生成输出路径
-//                def dest = outputProvider.getContentLocation(jarName + md5Name,
-//                        jarInput.contentTypes, jarInput.scopes, Format.JAR)
-                //将输入内容复制到输出
-//                FileUtils.copyFile(jarInput.file, dest)
-
-            }
-
-            //对类型为“文件夹”的input进行遍历 文件夹里面包含的是我们手写的类以及R.class、BuildConfig.class以及R$XXX.class等
-            input.directoryInputs.each { DirectoryInput directoryInput ->
-                def dest = outputProvider.getContentLocation(directoryInput.name,
-                        directoryInput.contentTypes,
-                        directoryInput.scopes, Format.DIRECTORY)
-                ClassModifier.appendClassPath(directoryInput.file.getAbsolutePath())
-                // 将input的目录复制到output指定目录
-//                FileUtils.copyDirectory(directoryInput.file, dest)
-//                ClassModifier.testInject(directoryInput.file.absolutePath)
-
-            }
-
-        }
-
-        //查找注解信息
-        ClassModifier.findAnnotatedActivities()
-        ClassModifier.injectRouter(mProject)
-
-        //Transform的inputs有两种类型，一种是目录，一种是jar包，要分开遍历
-        inputs.each { TransformInput input ->
-            //对类型为jar文件的input进行遍历
-            input.jarInputs.each { JarInput jarInput ->
-                //jar文件一般是第三方依赖库jar文件
-                // 重命名输出文件（同目录copyFile会冲突）
-                def jarName = jarInput.name
-                println("abcdef $jarName")
-                def md5Name = DigestUtils.md5Hex(jarInput.file.getAbsolutePath())
-                if (jarName.endsWith(".jar")) {
-                    jarName = jarName.substring(0, jarName.length() - 4)
+            TransformEntity entity = new TransformEntity()
+            //Transform的inputs有两种类型，一种是目录，一种是jar包，要分开遍历
+            inputs.each { TransformInput input ->
+                //对类型为“文件夹”的input进行遍历 文件夹里面包含的是我们手写的类以及R.class、BuildConfig.class以及R$XXX.class等
+                input.directoryInputs.each { DirectoryInput directoryInput ->
+                    def dest = outputProvider.getContentLocation(directoryInput.name, directoryInput.contentTypes, directoryInput.scopes, Format.DIRECTORY)
+                    ClassModifier.appendClassPath(directoryInput.file.getAbsolutePath())
+                    entity.directoryEntities.add(new DirectoryEntity(directoryInput.file, dest))
+                    println("DirectoryInput each: ${directoryInput.file} --- ${dest}")
+                    //\app\build\intermediates\classes\prod\debug --- \app\build\intermediates\transforms\RouterTransform\prod\debug\0
                 }
-                //ClassModifier.appendClassPath(jarInput.file.getAbsolutePath())
-                //生成输出路径
-                def dest = outputProvider.getContentLocation(jarName + md5Name,
-                        jarInput.contentTypes, jarInput.scopes, Format.JAR)
-                //将输入内容复制到输出
-                FileUtils.copyFile(jarInput.file, dest)
+
+                //对类型为jar文件的input进行遍历， 一般是第三方依赖库jar文件，lib类型的module也以jar的形式处理,从下面输出可以看出
+                input.jarInputs.each { JarInput jarInput ->
+                    ClassModifier.appendClassPath(jarInput.file.getAbsolutePath())
+
+                    // 重命名输出文件（同目录copyFile会冲突）
+                    def jarName = jarInput.file.name
+                    def md5Name = DigestUtils.md5Hex(jarInput.file.absolutePath)
+//                if (jarName.endsWith(".jar")) {
+//                    jarName = jarName.substring(0, jarName.length() - 4)
+//                }
+                    File dest = outputProvider.getContentLocation(jarInput.name, jarInput.contentTypes, jarInput.scopes, Format.JAR)
+                    println("JarInputs each: ${jarInput.file} --- ${dest}")
+                    //\mphoto\build\intermediates\intermediate-jars\prod\debug\classes.jar --- \app\build\intermediates\transforms\RouterTransform\prod\debug\33.jar
+
+                    String jarZipDir = context.getTemporaryDir().getAbsolutePath() + File.separator + jarName.replace(".jar", "") + md5Name
+                    def jarEntity = new JarEntity(jarInput.file, dest, jarZipDir,)
+                    entity.jarEntities.add(jarEntity)
+                }
             }
 
-            //对类型为“文件夹”的input进行遍历 文件夹里面包含的是我们手写的类以及R.class、BuildConfig.class以及R$XXX.class等
-            input.directoryInputs.each { DirectoryInput directoryInput ->
-                def dest = outputProvider.getContentLocation(directoryInput.name,
-                        directoryInput.contentTypes,
-                        directoryInput.scopes, Format.DIRECTORY)
-//                ClassModifier.appendClassPath(directoryInput.file.getAbsolutePath())
-                // 将input的目录复制到output指定目录
-                FileUtils.copyDirectory(directoryInput.file, dest)
+            //查找注解信息
+            ClassModifier.findAnnotatedActivities()
+            ClassModifier.injectRouter(entity, mProject)
+
+            entity.directoryEntities.each {
+                FileUtils.copyDirectory(it.inputFile, it.outputFile)
+                println("directory copy: ${it.inputFile} to ${it.outputFile}")
             }
+
+            entity.jarEntities.each { JarEntity it ->
+                if (it.hasChanged) {
+                    String path = it.outputFile.absolutePath.replace(".jar", ".temp")
+                    println("***********bef")
+                    boolean jar = Util.zipJar(it.jarZipDir, path)
+                    println("***********after $jar   ${new File(path).length()}")
+
+                    it.inputFile = new File(path)
+                    println("***********333")
+
+                }
+
+                //将输入内容复制到输出
+                if (it.outputFile.exists() && (it.outputFile.lastModified() != it.inputFile.lastModified() || it.outputFile.length() != it.inputFile.length())) {
+                    it.outputFile.delete()
+                    println("output file exist and not same with input file , delete output file ${it.outputFile.absolutePath}")
+                }
+                if (!it.outputFile.exists()) {
+                    FileUtils.copyFile(it.inputFile, it.outputFile)
+                    println("copy jar file  from ${it.inputFile.absolutePath} to ${it.outputFile.absolutePath}")
+                }
+                it.inputFile.delete()
+//                FileUtils.copyFile(it.inputFile,it.outputFile)
+            }
+        } finally {
             ClassModifier.clean()
         }
 

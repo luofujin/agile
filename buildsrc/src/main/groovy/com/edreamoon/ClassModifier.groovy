@@ -1,5 +1,7 @@
 package com.edreamoon
 
+import com.edreamoon.entity.JarEntity
+import com.edreamoon.entity.TransformEntity
 import javassist.ClassPath
 import javassist.ClassPool
 import javassist.CtClass
@@ -7,6 +9,7 @@ import javassist.CtMethod
 import javassist.bytecode.AnnotationsAttribute
 import javassist.bytecode.annotation.Annotation
 import javassist.bytecode.annotation.StringMemberValue
+import org.apache.commons.io.FileUtils
 import org.gradle.api.Project
 import org.gradle.internal.os.OperatingSystem
 
@@ -52,6 +55,7 @@ class ClassModifier {
      * 查找注解信息
      */
     static void findAnnotatedActivities() {
+        ValueHolder.sActivityMapping.clear()
         ValueHolder.activities.each { activity ->
             println("@findAnnotatedActivities analysis ${activity}")
 
@@ -65,6 +69,7 @@ class ClassModifier {
                 if (an != null) {
                     String value = ((StringMemberValue) an.getMemberValue("path")).getValue()
                     println("@findAnnotatedActivities activity with annotation : ${activity} -->  path(${value})")
+                    ValueHolder.sActivityMapping.put(value, activity)
                 }
             }
         }
@@ -115,8 +120,8 @@ class ClassModifier {
         println("ClassModifier: writeRouterInfo done")
     }
 
-    static void injectRouter(Project project) {
-        CtClass clazz, routerClass
+    static void injectRouter(TransformEntity entity, Project project) {
+        CtClass routerClass
 
         // Router 初始化方法代码注入
         try {
@@ -126,7 +131,9 @@ class ClassModifier {
             }
 
             CtMethod init = routerClass.getDeclaredMethod("init")
-//            init.insertAfter("ACTIVITIES.put(\"app/third\", \"com.edreamoon.ThirdActivity\");")
+            ValueHolder.sActivityMapping.each {
+                init.insertAfter("ACTIVITIES.put(\"${it.key}\", \"${it.value}\");")
+            }
             String path = sClassPool.find(ROUTER_REFER).getFile() //routerClass.getURL().getFile()
             println("@injectRouter routerClass path: $path")
 //file:/E:/code/Component/frouter/build/intermediates/intermediate-jars/google/debug/classes.jar!/com/edreamoon/router/FRouter.class
@@ -138,13 +145,31 @@ class ClassModifier {
                 println(jarPath[1])
                 jarPath[1] = jarPath[1].replaceAll("/", "\\\\")
             } else {
-                jarPath = path.replace("!/com/edreamoon/component/FRouter.class", "").split(project.rootDir.absolutePath)
+                jarPath = path.replace("!/com/edreamoon/router/FRouter.class", "").split(project.rootDir.absolutePath)
             }
 
-            println("@injectRouter belong jar path: ${jarPath[1]}")
-//            routerClass.writeFile(ValueHolder.buildPath + "MJRouter")
+            String routerJarPath = jarPath[1]
+            println("@injectRouter routerJarPath: $routerJarPath")
+            for (JarEntity jarEntity in entity.jarEntities) {
+                def inPath = jarEntity.inputFile.absolutePath
+                println("@injectRouter jar path: ${inPath}")
+                if (inPath.contains(routerJarPath)) {
+                    println("find jarEntity that contains router")
+
+                    File zipDir = new File(jarEntity.jarZipDir)
+                    if (zipDir.exists()) {
+                        FileUtils.deleteDirectory(zipDir)
+                    }
+
+                    List<String> list = Util.unzipJar(inPath, jarEntity.jarZipDir)
+                    routerClass.writeFile(jarEntity.jarZipDir)
+                    jarEntity.hasChanged = true
+                    break
+                }
+            }
+            routerClass.writeFile(ValueHolder.buildPath + "Router")
         } catch (Exception e) {
-            println("&&&&&&&&&&&&&&&&&&&&&&&&&&&& ${e.getMessage()}")
+            println("error &&&&&&&&&&&&&&&&&&&&&&&&&&&& ${e.getMessage()}")
         } finally {
             if (null != routerClass) {
                 sModifiedClass.add(routerClass)

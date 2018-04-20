@@ -2,12 +2,14 @@ package com.edreamoon.photo;
 
 import android.content.Context;
 import android.content.Intent;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 
-//import com.edreamoon.mread.ReadMainActivity;
+import com.edreamoon.router.annotation.Router;
 
+
+@Router(path = "photo/main")
 public class PhotoActivity extends AppCompatActivity {
 
     @Override

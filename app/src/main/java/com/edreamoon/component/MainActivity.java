@@ -5,11 +5,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 
-import com.edreamoon.photo.PhotoActivity;
-
-//import com.edreamoon.photo.PhotoActivity;
-//import com.edreamoon.mread.ReadMainActivity;
-
+import com.edreamoon.router.FRouter;
 
 /**
  * Created by jianfeng.li on 2017/11/24.
@@ -26,15 +22,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         init();
     }
 
-    private void init(){
-        Log.e("lijf", "init: ");
+    private void init() {
+        Log.e("lijf", "init: " + FRouter.instance().getActivity("app/third"));
     }
 
     @Override
     public void onClick(View v) {
         int id = v.getId();
         if (id == R.id.detail) {
-            PhotoActivity.start(this);
+            FRouter.instance().start("photo/main");
         }
 
 //        else if (id == R.id.read) {

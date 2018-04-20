@@ -15,7 +15,7 @@ class RouterPlu implements Plugin<Project> {
                 output.processManifest.doLast {
                     println("setting buildTypeName ${variant.buildType.name}")
                     ValueHolder.activities.clear()
-//                        ValueHolder.infos.clear()
+//                        ValueHolder.sActivityMapping.clear()
                     ArrayList<File> manifestFileList = new ArrayList<>()
 
                     [output.processManifest.manifestOutputDirectory,
